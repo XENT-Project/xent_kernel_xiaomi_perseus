@@ -883,8 +883,6 @@ int dsi_phy_update_phy_timings(struct msm_dsi_phy *phy,
 						 &phy->cfg.timing, true);
 	if (rc)
 		pr_err("failed to calculate phy timings %d\n", rc);
-	else
-		phy->cfg.is_phy_timing_present = true;
 
 	return rc;
 }
