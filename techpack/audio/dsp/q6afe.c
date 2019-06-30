@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -291,6 +291,15 @@ static int32_t sp_make_afe_callback(uint32_t *payload, uint32_t payload_size)
 	return 0;
 }
 
+static bool afe_token_is_valid(uint32_t token)
+{
+	if (token >= AFE_MAX_PORTS) {
+		pr_err("%s: token %d is invalid.\n", __func__, token);
+		return false;
+	}
+	return true;
+}
+
 static int32_t afe_callback(struct apr_client_data *data, void *priv)
 {
 	if (!data) {
@@ -365,6 +374,10 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 						 data->payload_size))
 				return -EINVAL;
 		}
+		if (afe_token_is_valid(data->token))
+			wake_up(&this_afe.wait[data->token]);
+		else
+			return -EINVAL;
 		wake_up(&this_afe.wait[data->token]);
 	} else if (data->opcode == ULTRASOUND_OPCODE) {
 		if (data->payload != NULL)
@@ -401,7 +414,10 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 			case AFE_PORTS_CMD_DTMF_CTL:
 			case AFE_SVC_CMD_SET_PARAM:
 				atomic_set(&this_afe.state, 0);
-				wake_up(&this_afe.wait[data->token]);
+				if (afe_token_is_valid(data->token))
+					wake_up(&this_afe.wait[data->token]);
+				else
+					return -EINVAL;
 				break;
 			case AFE_SERVICE_CMD_REGISTER_RT_PORT_DRIVER:
 				break;
@@ -413,7 +429,10 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 				break;
 			case AFE_CMD_ADD_TOPOLOGIES:
 				atomic_set(&this_afe.state, 0);
-				wake_up(&this_afe.wait[data->token]);
+				if (afe_token_is_valid(data->token))
+					wake_up(&this_afe.wait[data->token]);
+				else
+					return -EINVAL;
 				pr_debug("%s: AFE_CMD_ADD_TOPOLOGIES cmd 0x%x\n",
 						__func__, payload[1]);
 				break;
@@ -435,7 +454,10 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 			else
 				this_afe.mmap_handle = payload[0];
 			atomic_set(&this_afe.state, 0);
-			wake_up(&this_afe.wait[data->token]);
+			if (afe_token_is_valid(data->token))
+				wake_up(&this_afe.wait[data->token]);
+			else
+				return -EINVAL;
 		} else if (data->opcode == AFE_EVENT_RT_PROXY_PORT_STATUS) {
 			port_id = (uint16_t)(0x0000FFFF & payload[0]);
 		}
@@ -1655,8 +1677,8 @@ void afe_send_cal(u16 port_id)
 		if (ret < 0)
 			send_afe_cal_type(AFE_LSM_TX_CAL, port_id);
 	} else if (afe_get_port_type(port_id) == MSM_AFE_PORT_TYPE_RX) {
-		afe_send_cal_spkr_prot_rx(port_id);
 		send_afe_cal_type(AFE_COMMON_RX_CAL, port_id);
+		afe_send_cal_spkr_prot_rx(port_id);
 	}
 }
 
@@ -3145,7 +3167,8 @@ static int q6afe_send_enc_config(u16 port_id,
 		goto exit;
 	}
 
-	if (format == ASM_MEDIA_FMT_LDAC) {
+	if (format == ASM_MEDIA_FMT_LDAC &&
+	    cfg->ldac_config.abr_config.is_abr_enabled) {
 		config.param.payload_size =
 			payload_size + sizeof(config.port.map_param);
 		pr_debug("%s:sending AFE_ENCODER_PARAM_ID_BIT_RATE_LEVEL_MAP to DSP payload = %d\n",
