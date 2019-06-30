@@ -1,5 +1,4 @@
 /* Copyright (c) 2017-2018, The Linux Foundation. All rights reserved.
- * Copyright (C) 2018 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -77,8 +76,6 @@
 
 		qcom,tsens-name = "tsens_tz_sensor12";
 		#cooling-cells = <2>;
-
-		qcom,pm-qos-active-latency = <460>;
 
 		clocks = <&clock_gfx GPU_CC_GX_GFX3D_CLK>,
 			<&clock_gpucc GPU_CC_CXO_CLK>,
