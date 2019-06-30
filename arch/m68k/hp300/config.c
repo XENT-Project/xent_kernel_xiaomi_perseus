@@ -14,7 +14,6 @@
 #include <linux/console.h>
 #include <linux/rtc.h>
 
-#include <asm/bootinfo.h>
 #include <asm/bootinfo-hp300.h>
 #include <asm/byteorder.h>
 #include <asm/machdep.h>

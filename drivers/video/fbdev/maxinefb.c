@@ -33,10 +33,6 @@
 #include <linux/fb.h>
 #include <video/maxinefb.h>
 
-/* bootinfo.h defines the machine type values, needed when checking */
-/* whether are really running on a maxine, KM                       */
-#include <asm/bootinfo.h>
-
 static struct fb_info fb_info;
 
 static struct fb_var_screeninfo maxinefb_defined = {

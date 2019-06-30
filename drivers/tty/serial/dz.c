@@ -50,7 +50,6 @@
 #include <linux/tty_flip.h>
 
 #include <linux/atomic.h>
-#include <asm/bootinfo.h>
 #include <asm/io.h>
 
 #include <asm/dec/interrupts.h>

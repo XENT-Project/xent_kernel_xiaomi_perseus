@@ -9,7 +9,6 @@
 #include <linux/interrupt.h>
 
 #include <asm/setup.h>
-#include <asm/bootinfo.h>
 #include <asm/bootinfo-apollo.h>
 #include <asm/byteorder.h>
 #include <asm/pgtable.h>

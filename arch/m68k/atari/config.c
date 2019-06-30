@@ -36,7 +36,6 @@
 #include <linux/vt_kern.h>
 #include <linux/module.h>
 
-#include <asm/bootinfo.h>
 #include <asm/bootinfo-atari.h>
 #include <asm/byteorder.h>
 #include <asm/setup.h>

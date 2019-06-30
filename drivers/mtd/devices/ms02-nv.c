@@ -16,7 +16,6 @@
 #include <linux/types.h>
 
 #include <asm/addrspace.h>
-#include <asm/bootinfo.h>
 #include <asm/dec/ioasic_addrs.h>
 #include <asm/dec/kn02.h>
 #include <asm/dec/kn03.h>

@@ -53,7 +53,6 @@
 #include <linux/ethtool.h>
 #include <linux/crc32.h>
 
-#include <asm/bootinfo.h>
 #include <asm/bitops.h>
 #include <asm/pgtable.h>
 #include <asm/io.h>

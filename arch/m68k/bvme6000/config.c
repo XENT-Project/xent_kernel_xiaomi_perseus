@@ -27,7 +27,6 @@
 #include <linux/interrupt.h>
 #include <linux/bcd.h>
 
-#include <asm/bootinfo.h>
 #include <asm/bootinfo-vme.h>
 #include <asm/byteorder.h>
 #include <asm/pgtable.h>
