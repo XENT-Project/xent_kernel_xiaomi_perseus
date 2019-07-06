@@ -48,7 +48,7 @@ extern int tavil_mbhc_post_ssr_init(struct wcd934x_mbhc *mbhc,
 extern int tavil_mbhc_get_impedance(struct wcd934x_mbhc *wcd934x_mbhc,
 				    uint32_t *zl, uint32_t *zr);
 extern int tavil_mb_pull_down(struct snd_soc_codec *codec, bool active,
-			      int value);
+			int value);
 #else
 static inline int tavil_mbhc_init(struct wcd934x_mbhc **mbhc,
 				  struct snd_soc_codec *codec,
@@ -81,6 +81,7 @@ static inline int tavil_mbhc_get_impedance(struct wcd934x_mbhc *wcd934x_mbhc,
 		*zr = 0;
 	return -EINVAL;
 }
+
 static inline int tavil_mb_pull_down(struct snd_soc_codec *codec, bool active,
 			int value)
 {

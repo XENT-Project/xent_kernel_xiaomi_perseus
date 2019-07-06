@@ -1,4 +1,5 @@
 /* Copyright (c) 2012-2019, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2018 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -20,12 +21,12 @@
 #include <linux/delay.h>
 #include <dsp/msm_audio_ion.h>
 #include <dsp/apr_audio-v2.h>
+#include <dsp/apr_elliptic.h>
 #include <dsp/audio_cal_utils.h>
 #include <dsp/q6afe-v2.h>
 #include <dsp/q6audio-v2.h>
 #include <ipc/apr_tal.h>
 #include "adsp_err.h"
-#include <dsp/apr_elliptic.h>
 
 #define WAKELOCK_TIMEOUT	5000
 enum {
@@ -362,14 +363,20 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 			return -EINVAL;
 		}
 
+		if (rtac_make_afe_callback(data->payload,
+					   data->payload_size))
+			return 0;
+
+		if (data->payload_size < 3 * sizeof(uint32_t)) {
+			pr_err("%s: Error: size %d is less than expected\n",
+				__func__, data->payload_size);
+			return -EINVAL;
+		}
+
 		if (payload[2] == AFE_PARAM_ID_DEV_TIMING_STATS) {
 			av_dev_drift_afe_cb_handler(data->payload,
 						    data->payload_size);
 		} else {
-			if (rtac_make_afe_callback(data->payload,
-						   data->payload_size))
-				return 0;
-
 			if (sp_make_afe_callback(data->payload,
 						 data->payload_size))
 				return -EINVAL;
@@ -378,7 +385,6 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 			wake_up(&this_afe.wait[data->token]);
 		else
 			return -EINVAL;
-		wake_up(&this_afe.wait[data->token]);
 	} else if (data->opcode == ULTRASOUND_OPCODE) {
 		if (data->payload != NULL)
 			elliptic_process_apr_payload(data->payload);
@@ -390,6 +396,11 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 
 		payload = data->payload;
 		if (data->opcode == APR_BASIC_RSP_RESULT) {
+			if (data->payload_size < (2 * sizeof(uint32_t))) {
+				pr_err("%s: Error: size %d is less than expected\n",
+					__func__, data->payload_size);
+				return -EINVAL;
+			}
 			pr_debug("%s:opcode = 0x%x cmd = 0x%x status = 0x%x token=%d\n",
 				__func__, data->opcode,
 				payload[0], payload[1], data->token);
@@ -1121,7 +1132,6 @@ fail_cmd:
 	return ret;
 }
 
-/* ELUS Begin */
 afe_ultrasound_state_t elus_afe = {
        .ptr_apr = &this_afe.apr,
        .ptr_status = &this_afe.status,
@@ -1130,7 +1140,6 @@ afe_ultrasound_state_t elus_afe = {
        .timeout_ms = TIMEOUT_MS,
 };
 EXPORT_SYMBOL(elus_afe);
-/* ELUS End */
 
 static void afe_send_cal_spkr_prot_tx(int port_id)
 {

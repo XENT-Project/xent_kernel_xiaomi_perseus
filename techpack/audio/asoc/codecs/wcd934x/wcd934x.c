@@ -1,4 +1,5 @@
 /* Copyright (c) 2015-2018, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2018 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -5622,6 +5623,7 @@ static int tavil_compander_put(struct snd_kcontrol *kcontrol,
 		/* Set Gain Source Select based on compander enable/disable */
 		snd_soc_update_bits(codec, WCD934X_HPH_L_EN, 0x20,
 				(value ? 0x00:0x20));
+
 		/* Disable Compander Clock */
 		snd_soc_update_bits(codec, WCD934X_CDC_RX1_RX_PATH_CFG0, 0x02, 0x00);
 		snd_soc_update_bits(codec, WCD934X_CDC_COMPANDER1_CTL0, 0x04, 0x04);
@@ -5629,10 +5631,12 @@ static int tavil_compander_put(struct snd_kcontrol *kcontrol,
 		snd_soc_update_bits(codec, WCD934X_CDC_COMPANDER1_CTL0, 0x02, 0x00);
 		snd_soc_update_bits(codec, WCD934X_CDC_COMPANDER1_CTL0, 0x01, 0x00);
 		snd_soc_update_bits(codec, WCD934X_CDC_COMPANDER1_CTL0, 0x04, 0x00);
+
 		break;
 	case COMPANDER_2:
 		snd_soc_update_bits(codec, WCD934X_HPH_R_EN, 0x20,
 				(value ? 0x00:0x20));
+
 		/* Disable Compander Clock */
 		snd_soc_update_bits(codec, WCD934X_CDC_RX2_RX_PATH_CFG0, 0x02, 0x00);
 		snd_soc_update_bits(codec, WCD934X_CDC_COMPANDER2_CTL0, 0x04, 0x04);
@@ -5940,40 +5944,38 @@ static int tavil_mad_input_put(struct snd_kcontrol *kcontrol,
 		dev_info(codec->dev,
 			"%s: tavil input widget = %s, enable MIC BIAS2 directly.\n",
 			__func__, mad_input_widget);
-		goto found_amic2;
-	}
+	} else {
+		for (i = 0; i < card->num_of_dapm_routes; i++) {
+			if (!strcmp(card->of_dapm_routes[i].sink, mad_input_widget)) {
+				source_widget = card->of_dapm_routes[i].source;
+				if (!source_widget) {
+					dev_err(codec->dev,
+						"%s: invalid source widget\n",
+						__func__);
+					return -EINVAL;
+				}
 
-	for (i = 0; i < card->num_of_dapm_routes; i++) {
-		if (!strcmp(card->of_dapm_routes[i].sink, mad_input_widget)) {
-			source_widget = card->of_dapm_routes[i].source;
-			if (!source_widget) {
-				dev_err(codec->dev,
-					"%s: invalid source widget\n",
-					__func__);
-				return -EINVAL;
-			}
-
-			if (strnstr(source_widget,
-				"MIC BIAS1", sizeof("MIC BIAS1"))) {
-				mic_bias_found = 1;
-				break;
-			} else if (strnstr(source_widget,
-				"MIC BIAS2", sizeof("MIC BIAS2"))) {
-				mic_bias_found = 2;
-				break;
-			} else if (strnstr(source_widget,
-				"MIC BIAS3", sizeof("MIC BIAS3"))) {
-				mic_bias_found = 3;
-				break;
-			} else if (strnstr(source_widget,
-				"MIC BIAS4", sizeof("MIC BIAS4"))) {
-				mic_bias_found = 4;
-				break;
+				if (strnstr(source_widget,
+					"MIC BIAS1", sizeof("MIC BIAS1"))) {
+					mic_bias_found = 1;
+					break;
+				} else if (strnstr(source_widget,
+					"MIC BIAS2", sizeof("MIC BIAS2"))) {
+					mic_bias_found = 2;
+					break;
+				} else if (strnstr(source_widget,
+					"MIC BIAS3", sizeof("MIC BIAS3"))) {
+					mic_bias_found = 3;
+					break;
+				} else if (strnstr(source_widget,
+					"MIC BIAS4", sizeof("MIC BIAS4"))) {
+					mic_bias_found = 4;
+					break;
+				}
 			}
 		}
 	}
 
-found_amic2:
 	if (!mic_bias_found) {
 		dev_err(codec->dev, "%s: mic bias not found for input %s\n",
 			__func__, mad_input_widget);
@@ -6175,7 +6177,7 @@ static int codec_version_get(struct snd_kcontrol *kcontrol,
 			__func__, wcd9xxx->version);
 	}
 
-    return 0;
+	return 0;
 }
 
 static const char * const rx_hph_mode_mux_text[] = {
@@ -6521,7 +6523,7 @@ static const struct snd_kcontrol_new tavil_snd_controls[] = {
 	SOC_ENUM_EXT("AMIC_5_6 PWR MODE", amic_pwr_lvl_enum,
 		tavil_amic_pwr_lvl_get, tavil_amic_pwr_lvl_put),
 	SOC_ENUM_EXT("Codec Version", codec_version,
-		codec_version_get, NULL ),
+		codec_version_get, NULL),
 };
 
 static int tavil_dec_enum_put(struct snd_kcontrol *kcontrol,
