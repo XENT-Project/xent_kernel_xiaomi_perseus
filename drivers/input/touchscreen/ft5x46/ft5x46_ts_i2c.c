@@ -18,6 +18,7 @@
 #include <linux/module.h>
 #include <linux/interrupt.h>
 #include <linux/input/ft5x46_ts.h>
+
 struct i2c_client *fts_i2c_client = NULL;
 static int ft5x46_i2c_recv(struct device *dev,
 				void *buf, int len)

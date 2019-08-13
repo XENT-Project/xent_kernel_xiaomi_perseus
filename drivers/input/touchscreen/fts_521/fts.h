@@ -3,8 +3,8 @@
  *
  * FTS Capacitive touch screen controller (FingerTipS)
  *
- * Copyright (C) 2018 XiaoMi, Inc.
  * Copyright (C) 2017, STMicroelectronics
+ * Copyright (C) 2018 XiaoMi, Inc.
  * Authors: AMG(Analog Mems Group)
  *
  * 		marco.cali@st.com
@@ -149,7 +149,6 @@ do {\
 
 #define TSP_BUF_SIZE						PAGE_SIZE
 
-
 /**
  * Struct which contains information about the HW platform and set up
  */
@@ -286,7 +285,6 @@ struct fts_ts_info {
 #endif
 	struct class *fts_tp_class;
 	struct device *fts_touch_dev;
-	char *current_clicknum_file;
 
 	bool lockdown_is_ok;
 	struct completion tp_reset_completion;

@@ -3,6 +3,7 @@
  * FocalTech TouchScreen driver.
  *
  * Copyright (c) 2010-2017, Focaltech Ltd. All rights reserved.
+ * Copyright (C) 2018 XiaoMi, Inc.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -86,7 +87,7 @@ static struct rwreg_operation_t {
 * Output: no
 * Return: data len
 ***********************************************************************/
-static ssize_t fts_debug_write(struct file *filp, const char __user * buff, size_t count, loff_t * ppos)
+static ssize_t fts_debug_write(struct file *filp, const char __user *buff, size_t count, loff_t *ppos)
 {
 	u8 writebuf[PROC_WRITE_BUF_SIZE] = { 0 };
 	int buflen = count;
@@ -180,7 +181,7 @@ static ssize_t fts_debug_write(struct file *filp, const char __user * buff, size
 * Output: page point to data
 * Return: read char number
 ***********************************************************************/
-static ssize_t fts_debug_read(struct file *filp, char __user * buff, size_t count, loff_t * ppos)
+static ssize_t fts_debug_read(struct file *filp, char __user *buff, size_t count, loff_t *ppos)
 {
 	int ret = 0;
 	int num_read_chars = 0;
@@ -255,7 +256,7 @@ static const struct file_operations fts_proc_fops = {
 * Output: no
 * Return: data len
 ***********************************************************************/
-static int fts_debug_write(struct file *filp, const char __user * buff, unsigned long len, void *data)
+static int fts_debug_write(struct file *filp, const char __user *buff, unsigned long len, void *data)
 {
 	int ret = 0;
 	u8 writebuf[PROC_WRITE_BUF_SIZE] = { 0 };

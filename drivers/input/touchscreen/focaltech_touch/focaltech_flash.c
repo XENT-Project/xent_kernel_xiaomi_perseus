@@ -3,6 +3,7 @@
  * FocalTech fts TouchScreen driver.
  *
  * Copyright (c) 2010-2017, Focaltech Ltd. All rights reserved.
+ * Copyright (C) 2018 XiaoMi, Inc.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -73,7 +74,7 @@ struct fts_upgrade *fwupgrade;
 /*****************************************************************************
 * Static function prototypes
 *****************************************************************************/
-static u16 fts_pram_ecc_calc_host(u8 * pbuf, u16 length)
+static u16 fts_pram_ecc_calc_host(u8 *pbuf, u16 length)
 {
 	u16 ecc = 0;
 	u16 i = 0;
@@ -181,7 +182,7 @@ static int fts_pram_ecc_cal(struct i2c_client *client, u32 saddr, u32 len)
  *
  * return pramboot ecc of host if success, otherwise return error code
  ***********************************************************************/
-static int fts_pram_write_buf(struct i2c_client *client, u8 * buf, u32 len)
+static int fts_pram_write_buf(struct i2c_client *client, u8 *buf, u32 len)
 {
 	int ret = 0;
 	u32 i = 0;
@@ -446,7 +447,7 @@ int fts_pram_write_init(struct i2c_client *client)
 * Output:
 * Return: return true if fw is valid, otherwise return false
 ***********************************************************************/
-bool fts_fwupg_check_fw_valid(struct i2c_client * client)
+bool fts_fwupg_check_fw_valid(struct i2c_client *client)
 {
 	int ret = 0;
 
@@ -534,7 +535,7 @@ int fts_fwupg_get_boot_state(struct i2c_client *client, enum FW_STATUS *fw_sts)
 * Output:
 * Return: return true if state is match, otherwise return false
 ***********************************************************************/
-bool fts_fwupg_check_state(struct i2c_client * client, enum FW_STATUS rstate)
+bool fts_fwupg_check_state(struct i2c_client *client, enum FW_STATUS rstate)
 {
 	int ret = 0;
 	int i = 0;
@@ -852,7 +853,7 @@ int fts_fwupg_ecc_cal(struct i2c_client *client, u32 saddr, u32 len)
  * Output:
  * Return: return data ecc of host if success, otherwise return error code
  ***********************************************************************/
-int fts_flash_write_buf(struct i2c_client *client, u32 saddr, u8 * buf, u32 len, u32 delay)
+int fts_flash_write_buf(struct i2c_client *client, u32 saddr, u8 *buf, u32 len, u32 delay)
 {
 	int ret = 0;
 	u32 i = 0;
@@ -939,7 +940,7 @@ int fts_flash_write_buf(struct i2c_client *client, u32 saddr, u8 * buf, u32 len,
  *
  * Warning: can't call this function directly, need call in boot environment
  ***********************************************************************/
-int fts_flash_read_buf(struct i2c_client *client, u32 saddr, u8 * buf, u32 len)
+int fts_flash_read_buf(struct i2c_client *client, u32 saddr, u8 *buf, u32 len)
 {
 	int ret = 0;
 	u32 i = 0;
@@ -1000,7 +1001,7 @@ int fts_flash_read_buf(struct i2c_client *client, u32 saddr, u8 * buf, u32 len)
  * Output: buf   - data read from flash
  * Return: return 0 if success, otherwise return error code
  ***********************************************************************/
-int fts_flash_read(struct i2c_client *client, u32 addr, u8 * buf, u32 len)
+int fts_flash_read(struct i2c_client *client, u32 addr, u8 *buf, u32 len)
 {
 	int ret = 0;
 
@@ -1039,7 +1040,7 @@ read_flash_err:
  * Output:
  * Return: return file len if succuss, otherwise return error code
  ***********************************************************************/
-int fts_read_file(char *file_name, u8 ** file_buf)
+int fts_read_file(char *file_name, u8  **file_buf)
 {
 	int ret = 0;
 	char file_path[FILE_NAME_LENGTH] = { 0 };
@@ -1154,7 +1155,7 @@ err_bin:
 }
 
 #if FTS_AUTO_LIC_UPGRADE_EN
-static int fts_lic_get_vid_in_tp(struct i2c_client *client, u16 * vid)
+static int fts_lic_get_vid_in_tp(struct i2c_client *client, u16 *vid)
 {
 	int ret = 0;
 	u8 val[2] = { 0 };
@@ -1176,7 +1177,7 @@ static int fts_lic_get_vid_in_tp(struct i2c_client *client, u16 * vid)
 	return 0;
 }
 
-static int fts_lic_get_vid_in_host(u16 * vid)
+static int fts_lic_get_vid_in_host(u16 *vid)
 {
 	u8 val[2] = { 0 };
 	u8 *licbuf = NULL;
@@ -1203,7 +1204,7 @@ static int fts_lic_get_vid_in_host(u16 * vid)
 	return 0;
 }
 
-static int fts_lic_get_ver_in_tp(struct i2c_client *client, u8 * ver)
+static int fts_lic_get_ver_in_tp(struct i2c_client *client, u8 *ver)
 {
 	int ret = 0;
 
@@ -1221,7 +1222,7 @@ static int fts_lic_get_ver_in_tp(struct i2c_client *client, u8 * ver)
 	return 0;
 }
 
-static int fts_lic_get_ver_in_host(u8 * ver)
+static int fts_lic_get_ver_in_host(u8 *ver)
 {
 	int ret = 0;
 	struct fts_upgrade *upg = fwupgrade;
@@ -1340,7 +1341,7 @@ int fts_lic_upgrade(struct i2c_client *client, struct fts_upgrade *upg)
 }
 #endif /* FTS_AUTO_LIC_UPGRADE_EN */
 
-static int fts_param_get_ver_in_tp(struct i2c_client *client, u8 * ver)
+static int fts_param_get_ver_in_tp(struct i2c_client *client, u8 *ver)
 {
 	int ret = 0;
 
@@ -1363,7 +1364,7 @@ static int fts_param_get_ver_in_tp(struct i2c_client *client, u8 * ver)
 	return 0;
 }
 
-static int fts_param_get_ver_in_host(u8 * ver)
+static int fts_param_get_ver_in_host(u8 *ver)
 {
 	struct fts_upgrade *upg = fwupgrade;
 
@@ -1446,7 +1447,7 @@ static bool fts_param_need_upgrade(struct i2c_client *client)
  *
  * return 0 if success, otherwise return error code
  ***********************************************************************/
-static int fts_fwupg_get_ver_in_tp(struct i2c_client *client, u8 * ver)
+static int fts_fwupg_get_ver_in_tp(struct i2c_client *client, u8 *ver)
 {
 	int ret = 0;
 
@@ -1469,7 +1470,7 @@ static int fts_fwupg_get_ver_in_tp(struct i2c_client *client, u8 * ver)
  *
  * return 0 if success, otherwise return error code
  ***********************************************************************/
-static int fts_fwupg_get_ver_in_host(u8 * ver)
+static int fts_fwupg_get_ver_in_host(u8 *ver)
 {
 	struct fts_upgrade *upg = fwupgrade;
 
@@ -1641,7 +1642,7 @@ void fts_fwupg_auto_upgrade(struct fts_ts_data *ts_data)
  *
  * return 0 if success, otherwise return error code
  */
-int fts_fwupg_get_vendorid(struct fts_ts_data *ts_data, u16 * vid)
+int fts_fwupg_get_vendorid(struct fts_ts_data *ts_data, u16 *vid)
 {
 	int ret = 0;
 	bool fwvalid = false;

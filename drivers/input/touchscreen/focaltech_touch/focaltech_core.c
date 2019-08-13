@@ -3,6 +3,7 @@
  * FocalTech TouchScreen driver.
  *
  * Copyright (c) 2010-2017, FocalTech Systems, Ltd., all rights reserved.
+ * Copyright (C) 2018 XiaoMi, Inc.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -40,6 +41,7 @@
 #include <linux/earlysuspend.h>
 #define FTS_SUSPEND_LEVEL 1	/* Early-suspend level */
 #endif
+#include <linux/hwinfo.h>
 
 /*****************************************************************************
 * Private constant and macro definitions using #define
@@ -559,7 +561,7 @@ static int fts_pinctrl_select_release(struct fts_ts_data *ts)
 #if (FTS_DEBUG_EN && (FTS_DEBUG_LEVEL == 2))
 char g_sz_debug[1024] = { 0 };
 
-static void fts_show_touch_buffer(u8 * buf, int point_num)
+static void fts_show_touch_buffer(u8 *buf, int point_num)
 {
 	int len = point_num * FTS_ONE_TCH_LEN;
 	int count = 0;
@@ -1367,7 +1369,7 @@ static const struct attribute_group fts_attr_group = {
 };
 
 #define TP_INFO_MAX_LENGTH 50
-static ssize_t fts_lockdown_info_read(struct file *file, char __user * buf, size_t count, loff_t * pos)
+static ssize_t fts_lockdown_info_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
 	int cnt = 0, ret = 0;
 	char tmp[TP_INFO_MAX_LENGTH];
@@ -1394,7 +1396,7 @@ static const struct file_operations fts_lockdown_info_ops = {
 	.read = fts_lockdown_info_read,
 };
 
-static ssize_t fts_fw_version_read(struct file *file, char __user * buf, size_t count, loff_t * pos)
+static ssize_t fts_fw_version_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
 	int cnt = 0, ret = 0;
 	char tmp[TP_INFO_MAX_LENGTH];
@@ -1430,7 +1432,7 @@ static int tpdbg_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static ssize_t tpdbg_read(struct file *file, char __user * buf, size_t size, loff_t * ppos)
+static ssize_t tpdbg_read(struct file *file, char __user *buf, size_t size, loff_t *ppos)
 {
 
 	const char *str = "cmd support as below:\n \
@@ -1454,7 +1456,7 @@ static ssize_t tpdbg_read(struct file *file, char __user * buf, size_t size, lof
 	return len;
 }
 
-static ssize_t tpdbg_write(struct file *file, const char __user * buf, size_t size, loff_t * ppos)
+static ssize_t tpdbg_write(struct file *file, const char __user *buf, size_t size, loff_t *ppos)
 {
 	struct fts_ts_data *ts_data = file->private_data;
 	char *cmd = kzalloc(size + 1, GFP_KERNEL);
@@ -1804,6 +1806,8 @@ static int fts_ts_probe(struct i2c_client *client, const struct i2c_device_id *i
 	ts_data->early_suspend.resume = fts_ts_late_resume;
 	register_early_suspend(&ts_data->early_suspend);
 #endif
+	update_hardware_info(TYPE_TOUCH, 3);
+	update_hardware_info(TYPE_TP_MAKER, ts_data->lockdown_info[0] - 0x30);
 
 	FTS_FUNC_EXIT();
 	return 0;

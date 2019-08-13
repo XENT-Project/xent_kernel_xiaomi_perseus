@@ -13,6 +13,8 @@
  *
  */
 #include <linux/input/ft5x46_ts.h>
+#include <linux/hwinfo.h>
+
 #include "ft8716_pramboot.h"
 
 /* #define FT5X46_DEBUG_PERMISSION */
@@ -183,7 +185,7 @@
 #define LEN_FLASH_ECC_MAX		0xFFFE
 #define FT5X46_ESD_CHECK_PERIOD	5000
 
-static bool lcd_need_reset = false;
+static bool lcd_need_reset;
 static unsigned char proc_operate_mode = FT5X46_PROC_UPGRADE;
 static struct proc_dir_entry *ft5x46_proc_entry;
 #endif
@@ -216,7 +218,7 @@ struct ft5x46_mode_switch {
 static struct ft5x46_keypad_data *vir_keypad;
 struct ft5x46_data *ft_data;
 
-static int ft5x46_recv_byte(struct ft5x46_data *ft5x46, u8 len, ...)
+static int ft5x46_recv_byte(struct ft5x46_data *ft5x46, int len, ...)
 {
 	int error = 0;
 	va_list varg;
@@ -246,7 +248,7 @@ static int ft5x46_recv_block(struct ft5x46_data *ft5x46,
 	return ft5x46->bops->recv(ft5x46->dev, buf, len);
 }
 
-static int ft5x46_send_byte(struct ft5x46_data *ft5x46, u8 len, ...)
+static int ft5x46_send_byte(struct ft5x46_data *ft5x46, int len, ...)
 {
 	va_list varg;
 	u8 i, buf[len];
@@ -616,7 +618,7 @@ static int ft5x46_load_firmware(struct ft5x46_data *ft5x46,
 	for (i = 0; i < pdata->cfg_size; i++, firmware++) {
 		if (vid == firmware->vendor) {
 			if (ft5x46->dev->of_node)
-				if(ft5x46->chip_id == firmware->chip) {
+				if (ft5x46->chip_id == firmware->chip) {
 					dev_info(ft5x46->dev, "chip id = 0x%x, found it!\n",
 						ft5x46->chip_id);
 					ft5x46->current_index = i;
@@ -1297,6 +1299,7 @@ static int ft8716_load_firmware(struct ft5x46_data *ft5x46,
 			ft8716_reset_firmware(ft5x46);
 			return error;
 		}
+		update_hardware_info(TYPE_TP_MAKER, ft5x46->lockdown_info[0] - 0x30);
 		ft5x46->lockdown_info_acquired = true;
 		wake_up(&ft5x46->lockdown_info_acquired_wq);
 	}
@@ -1760,6 +1763,7 @@ static irqreturn_t ft5x46_interrupt(int irq, void *dev_id)
 	u8 val = 0;
 
 	mutex_lock(&ft5x46->mutex);
+
 	if (ft5x46->wakeup_mode && ft5x46->in_suspend) {
 		error = ft5x46_read_byte(ft5x46, 0xD0, &val);
 		if (error)
@@ -1884,6 +1888,7 @@ out:
 #ifdef CONFIG_TOUCHSCREEN_FT5X46P_PROXIMITY
 	wake_up(&ft5x46->resume_wq);
 #endif
+
 	return 0;
 }
 EXPORT_SYMBOL_GPL(ft5x46_resume);
@@ -2147,8 +2152,8 @@ static ssize_t ft5x46_dbgdump_store(struct device *dev,
 	return error ? : count;
 }
 
-static int ft5x46_updatefw_with_filename(struct ft5x46_data* ft5x46,
-		const char* filename, bool *upgraded)
+static int ft5x46_updatefw_with_filename(struct ft5x46_data *ft5x46,
+		const char *filename, bool *upgraded)
 {
 	struct ft5x46_firmware_data firmware;
 	const struct firmware *fw;
@@ -2217,14 +2222,14 @@ static int ft5x46_enter_factory(struct ft5x46_data *ft5x46_ts)
 	error = ft5x46_write_byte(ft5x46_ts, FT5X0X_REG_DEVIDE_MODE,
 							FT5X0X_DEVICE_MODE_TEST);
 	if (error)
-		return -1;
+		return -EPERM;
 	msleep(100);
 	error = ft5x46_read_byte(ft5x46_ts, FT5X0X_REG_DEVIDE_MODE, &reg_val);
 	if (error)
-		return -1;
+		return -EPERM;
 	if ((reg_val & 0x70) != FT5X0X_DEVICE_MODE_TEST) {
 		dev_info(ft5x46_ts->dev, "ERROR: The Touch Panel was not put in Factory Mode.");
-		return -1;
+		return -EPERM;
 	}
 
 	return 0;
@@ -2237,14 +2242,14 @@ static int ft5x46_enter_work(struct ft5x46_data *ft5x46_ts)
 	error = ft5x46_write_byte(ft5x46_ts, FT5X0X_REG_DEVIDE_MODE,
 							FT5X0X_DEVICE_MODE_NORMAL);
 	if (error)
-		return -1;
+		return -EPERM;
 	msleep(100);
 	error = ft5x46_read_byte(ft5x46_ts, FT5X0X_REG_DEVIDE_MODE, &reg_val);
 	if (error)
-		return -1;
+		return -EPERM;
 	if ((reg_val & 0x70) != FT5X0X_DEVICE_MODE_NORMAL) {
 		dev_info(ft5x46_ts->dev, "ERROR: The Touch Panel was not put in Normal Mode.\n");
-		return -1;
+		return -EPERM;
 	}
 
 	schedule_delayed_work(&ft5x46_ts->lcd_esdcheck_work,
@@ -2425,7 +2430,7 @@ static ssize_t ft5x46_selftest_store(struct device *dev,
 	unsigned long val;
 
 	error = kstrtoul(buf, 0, &val);
-	if (error )
+	if (error)
 		return error;
 	if (val != 1)
 		return -EINVAL;
@@ -2655,7 +2660,7 @@ static ssize_t ft5x46_irq_enable_store(struct device *dev,
 		pr_err("Invalid data\n");
 		return -EINVAL;
 	}
-	if(val)
+	if (val)
 		enable_irq(ft5x46->irq);
 	else
 		disable_irq(ft5x46->irq);
@@ -2694,7 +2699,7 @@ static ssize_t ft5x46_lcd_esd_test(struct device *dev,
 		pr_err("Invalid data\n");
 		return -EINVAL;
 	}
-	if(val)
+	if (val)
 		lcd_need_reset = true;
 	else
 		lcd_need_reset = false;
@@ -2767,7 +2772,7 @@ static const struct attribute_group ft5x46_attr_group = {
 
 static int ft5x46_panel_power(struct ft5x46_data *data, bool on)
 {
-	static bool status = false;
+	static bool status;
 	int rc = 0;
 
 	if (on == status) {
@@ -3401,7 +3406,6 @@ static void ft5x46_switch_mode_work(struct work_struct *work)
 	struct ft5x46_mode_switch *ms = container_of(work, struct ft5x46_mode_switch, switch_mode_work);
 	struct ft5x46_data *ft5x46 = ms->data;
 	u8 value = ms->mode;
-	char ch[16] = {0x0,};
 
 	if (value == FT5X46_INPUT_EVENT_WAKUP_MODE_ON || value == FT5X46_INPUT_EVENT_WAKUP_MODE_OFF) {
 		if (ft5x46) {
@@ -3410,7 +3414,6 @@ static void ft5x46_switch_mode_work(struct work_struct *work)
 			if (ft5x46->in_suspend)
 				ft5x46_wakeup_reconfigure(ft5x46,
 					(bool)(value - FT5X46_INPUT_EVENT_WAKUP_MODE_OFF));
-			snprintf(ch, sizeof(ch), "%s", ft5x46->wakeup_mode ? "enabled" : "disabled");
 		}
 	}
 
@@ -4284,7 +4287,6 @@ struct ft5x46_data *ft5x46_probe(struct device *dev,
 	ft5x46->hw_is_ready = false;
 	init_waitqueue_head(&ft5x46->lockdown_info_acquired_wq);
 	schedule_work(&ft5x46->work);
-
 	return ft5x46;
 
 #ifdef FT5X46_APK_DEBUG_CHANNEL

@@ -3,8 +3,8 @@
  *
  * FTS Capacitive touch screen controller (FingerTipS)
  *
- * Copyright (C) 2018 XiaoMi, Inc.
  * Copyright (C) 2016, STMicroelectronics Limited.
+ * Copyright (C) 2018 XiaoMi, Inc.
  * Authors: AMG(Analog Mems Group)
  *
  * 		marco.cali@st.com
@@ -57,6 +57,7 @@
 #include <linux/proc_fs.h>
 #include <linux/uaccess.h>
 #include <linux/debugfs.h>
+
 #ifdef KERNEL_ABOVE_2_6_38
 #include <linux/input/mt.h>
 #endif
@@ -3250,8 +3251,8 @@ static const char *fts_get_config(struct fts_ts_info *info)
 	ret |= fts_enableInterrupt();
 
 	for (i = 0; i < pdata->config_array_size; i++) {
-		if ((info->lockdown_info[0] ==
-		     pdata->config_array[i].tp_vendor))
+		if (info->lockdown_info[0] ==
+		     pdata->config_array[i].tp_vendor)
 			break;
 	}
 
@@ -3263,6 +3264,7 @@ static const char *fts_get_config(struct fts_ts_info *info)
 	logError(1, "%s Choose config %d: %s", tag, i,
 		 pdata->config_array[i].fts_cfg_name);
 	pdata->current_index = i;
+
 	return pdata->config_array[i].fts_cfg_name;
 }
 
@@ -3281,8 +3283,8 @@ static const char *fts_get_limit(struct fts_ts_info *info)
 	ret |= fts_enableInterrupt();
 
 	for (i = 0; i < pdata->config_array_size; i++) {
-		if ((info->lockdown_info[0] ==
-		     pdata->config_array[i].tp_vendor))
+		if (info->lockdown_info[0] ==
+		     pdata->config_array[i].tp_vendor)
 			break;
 	}
 
@@ -3402,7 +3404,7 @@ int fts_fw_update(struct fts_ts_info *info, const char *fw_name, int force)
 			 tag, __func__, ret);
 	}
 
-	if ((init_type == NO_INIT)) {
+	if (init_type == NO_INIT) {
 #ifdef PRE_SAVED_METHOD
 		if (systemInfo.u8_cfgAfeVer != systemInfo.u8_cxAfeVer) {
 			init_type = SPECIAL_FULL_PANEL_INIT;
@@ -3886,7 +3888,8 @@ static int fts_mode_handler(struct fts_ts_info *info, int force)
 			res |= setScanMode(SCAN_MODE_ACTIVE, 0x00);
 			logError(1, "%s %s: Sense ON without cal \n", tag, __func__);
 			res |= setScanMode(SCAN_MODE_ACTIVE, 0x20);
-		} else {
+		}
+		else {
 			logError(1, "%s %s: Sense ON\n", tag, __func__);
 			res |= setScanMode(SCAN_MODE_ACTIVE, 0x01);
 		}
@@ -4362,6 +4365,7 @@ static int parse_dt(struct device *dev, struct fts_hw_platform_data *bdata)
 			logError(1, "%s %s:limit_name: %s", tag, __func__,
 				 config_info->fts_limit_name);
 		}
+
 		config_info++;
 	}
 
@@ -5212,13 +5216,10 @@ static int fts_probe(struct spi_device *client)
 #endif
 	if (info->fts_tp_class == NULL)
 		info->fts_tp_class = class_create(THIS_MODULE, "touch");
-	info->fts_touch_dev =
-	    device_create(info->fts_tp_class, NULL, 0x49, info, "tp_dev");
+	info->fts_touch_dev = device_create(info->fts_tp_class, NULL, 0x49, info, "tp_dev");
 
 	if (IS_ERR(info->fts_touch_dev)) {
-		logError(1,
-			 "%s ERROR: Failed to create device for the sysfs!\n",
-			 tag);
+		logError(1, "%s ERROR: Failed to create device for the sysfs!\n", tag);
 		goto ProbeErrorExit_8;
 	}
 

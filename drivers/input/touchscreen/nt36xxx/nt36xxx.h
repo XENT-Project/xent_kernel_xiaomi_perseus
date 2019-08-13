@@ -88,7 +88,6 @@ extern const uint16_t gesture_key_array[];
 #define NVT_TOUCH_ESD_CHECK_PERIOD 1500	/* ms */
 #define NVT_LOCKDOWN_SIZE	8
 
-
 struct nvt_config_info {
 	u8 tp_vendor;
 	u8 tp_color;
@@ -158,7 +157,6 @@ struct nvt_ts_data {
 	struct work_struct resume_work;
 	struct workqueue_struct *event_wq;
 	struct completion dev_pm_suspend_completion;
-
 };
 
 struct nvt_mode_switch {

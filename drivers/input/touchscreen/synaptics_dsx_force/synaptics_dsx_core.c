@@ -2,10 +2,10 @@
  * Synaptics DSX touchscreen driver
  *
  * Copyright (C) 2012-2015 Synaptics Incorporated. All rights reserved.
- * Copyright (C) 2018 XiaoMi, Inc.
  *
  * Copyright (C) 2012 Alexandra Chin <alexandra.chin@tw.synaptics.com>
  * Copyright (C) 2012 Scott Lin <scott.lin@tw.synaptics.com>
+ * Copyright (C) 2018 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,8 @@
 #include <linux/gpio.h>
 #include <linux/platform_device.h>
 #include <linux/regulator/consumer.h>
-#include <linux/input/synaptics_dsx.h>
+#include <linux/input/synaptics_dsx_force.h>
+#include <linux/hwinfo.h>
 #include "synaptics_dsx_core.h"
 
 #ifdef KERNEL_ABOVE_2_6_38
@@ -49,7 +50,6 @@
 #endif
 
 #if defined(CONFIG_SECURE_TOUCH)
-#include <linux/i2c.h>
 #include <linux/pm_runtime.h>
 #include <linux/errno.h>
 #endif
@@ -134,17 +134,6 @@
 
 #define DOUBLE_TAP	0x01
 #define HOMEKEY_WAKEUP	0x80
-#define F51_CUSTOM_PALM_CTL 0x063B
-#define F12_2D_CTRL23  0x001A
-#define F51_CUSTOM_CTRL109 0x063B
-#define F51_CUSTOM_CTRL110 0x063C
-#define F51_CUSTOM_CTRL111 0x063D
-#define F51_CUSTOM_CTRL112 0x063E
-#define F51_CUSTOM_CTRL113 0x063F
-#define F51_CUSTOM_CTRL114 0x0640
-#define F51_CUSTOM_CTRL115 0x0641
-
-#define F54_FORCE_UPDATE 0x169
 
 #define INPUT_EVENT_START			0
 #define INPUT_EVENT_SENSITIVE_MODE_OFF		0
@@ -930,7 +919,6 @@ static ssize_t synaptics_secure_touch_enable_store(struct device *dev,
 
 	err = count;
 
-
 	switch (value) {
 	case 0:
 		if (atomic_read(&data->st_enabled) == 0)
@@ -975,7 +963,7 @@ static ssize_t synaptics_secure_touch_enable_store(struct device *dev,
 		err = -EINVAL;
 		break;
 	}
-       dev_err(data->pdev->dev.parent, "synaptics_secure_touch_enable_store err=%x\n", err);
+	dev_err(data->pdev->dev.parent, "synaptics_secure_touch_enable_store err=%x\n", err);
 	return err;
 }
 
@@ -1224,7 +1212,7 @@ static ssize_t synaptics_rmi4_irq_enable_store(struct device *dev,
 
 	if (sscanf(buf, "%u", &input) != 1)
 		return -EINVAL;
-	if(input)
+	if (input)
 		enable_irq(rmi4_data->irq);
 	else
 		disable_irq(rmi4_data->irq);
@@ -1270,7 +1258,6 @@ static ssize_t synaptics_rmi4_virtual_key_map_show(struct kobject *kobj,
 
 	return count;
 }
-
 
 static int synaptics_rmi4_f11_abs_report(struct synaptics_rmi4_data *rmi4_data,
 		struct synaptics_rmi4_fn *fhandler)
@@ -2226,6 +2213,7 @@ static int synaptics_rmi4_query_chip_id(struct synaptics_rmi4_data *rmi4_data)
 		rmi4_data->chip_id = -1; /* Set chip_id -1 to ensure it won't do firmware upgrading */
 		return -EINVAL;
 	}
+
 	return 0;
 }
 
@@ -4363,6 +4351,7 @@ static int synaptics_rmi4_free_fingers(struct synaptics_rmi4_data *rmi4_data)
 		}
 		input_sync(rmi4_data->stylus_dev);
 	}
+
 	rmi4_data->touchs = 0;
 
 	mutex_unlock(&(rmi4_data->rmi4_report_mutex));
@@ -4934,7 +4923,7 @@ static int synaptics_rmi4_probe(struct platform_device *pdev)
 	rmi4_data->reset_device = synaptics_rmi4_reset_device;
 	rmi4_data->irq_enable = synaptics_rmi4_irq_enable;
 	rmi4_data->sleep_enable = synaptics_rmi4_sleep_enable;
-//	rmi4_data->hw_version = get_hw_version_major();
+
 
 	mutex_init(&(rmi4_data->rmi4_reset_mutex));
 	mutex_init(&(rmi4_data->rmi4_report_mutex));
@@ -5143,10 +5132,11 @@ static int synaptics_rmi4_probe(struct platform_device *pdev)
 #endif
 
 	device_init_wakeup(&pdev->dev, 1);
-
+	update_hardware_info(TYPE_TOUCH, 1); /* Synaptics */
 
 	synaptics_secure_touch_init(rmi4_data);
 	synaptics_secure_touch_stop(rmi4_data, 1);
+
 	return retval;
 
 err_sysfs_panel_vendor:
@@ -5342,7 +5332,7 @@ static void synaptics_rmi4_f11_wg(struct synaptics_rmi4_data *rmi4_data,
 static void drm_regulator_ctrl(struct synaptics_rmi4_data *rmi4_data, unsigned int flag, bool enable)
 {
 	int retval = 0;
-	static unsigned int status = 0;
+	static unsigned int status;
 
 	if (rmi4_data == NULL)
 		return;
@@ -5606,7 +5596,7 @@ static int synaptics_rmi4_drm_notifier_cb(struct notifier_block *self,
 				rmi4_data->fb_ready = true;
 				if (rmi4_data->wakeup_en) {
 					drm_panel_reset_skip_enable(false);
-					//drm_regulator_ctrl(rmi4_data, DISP_REG_ALL, false);
+
 					drm_dsi_ulps_enable(false);
 					rmi4_data->wakeup_en = false;
 				}
@@ -5624,7 +5614,7 @@ static int synaptics_rmi4_drm_notifier_cb(struct notifier_block *self,
 
 				if (rmi4_data->enable_wakeup_gesture) {
 					rmi4_data->wakeup_en = true;
-					//drm_regulator_ctrl(rmi4_data, DISP_REG_ALL, true);
+
 					drm_panel_reset_skip_enable(true);
 					drm_dsi_ulps_enable(true);
 				}
@@ -5806,6 +5796,7 @@ static int synaptics_rmi4_suspend(struct device *dev)
 
 	if (rmi4_data->stay_awake || rmi4_data->suspend)
 		return 0;
+
 	if (bdata->cut_off_power || (rmi4_data->chip_is_tddi && !rmi4_data->wakeup_en)) {
 		if (rmi4_data->fw_updating)
 			return 0;
@@ -5852,7 +5843,6 @@ exit:
 
 	rmi4_data->suspend = true;
 
-
 	return 0;
 }
 
@@ -5867,7 +5857,7 @@ static int synaptics_rmi4_resume(struct device *dev)
 		rmi4_data->hw_if->board_data;
 
 #ifdef CONFIG_DRM
-	static int skip = 0;
+	static int skip;
 
 	if (skip == 0) {
 		skip = 1;
@@ -5927,7 +5917,6 @@ static int synaptics_rmi4_resume(struct device *dev)
 
 	if (rmi4_data->enable_cover_mode)
 		cover_mode_set(rmi4_data, rmi4_data->enable_cover_mode);
-
 
 	return 0;
 }
