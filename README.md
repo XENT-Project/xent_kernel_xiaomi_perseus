@@ -5,7 +5,7 @@ Stable branches have the -stable tag at end of branch name like `msm-4.9-stable`
 Unstable branches have `-exp` tag at end
 usually all branches are on 4.9 version else tag at end is `-exp-4...`
 
-Because i like force force pushing it can be hard to fork this without knowing how you can handle this
+Because i like force pushing it can be hard to fork this without knowing how you can handle this
 
 ## Informations about perseus
 ![perseus](https://i.imgur.com/pxpWGhw.png "Xiaomi Mi Mix 3")
@@ -23,4 +23,4 @@ Because i like force force pushing it can be hard to fork this without knowing h
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  GNU General Public License for more details.
 ```
-> See file for more details: [COPYING](https://raw.githubusercontent.com/XENT-Project/android_kernel_xiaomi_perseus_new/xent-ten/COPYING)
+> See file for more details: [COPYING](https://raw.githubusercontent.com/XENT-Project/xent_kernel_xiaomi_perseus/xent-ten-stable/COPYING)
